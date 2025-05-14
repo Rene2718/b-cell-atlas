@@ -17,18 +17,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import os
+import gdown
 
 h5_url = "https://drive.google.com/uc?export=download&id=1tTh4IUu_zsvoDnAeGp0aR2Fr1D34tOj2"
 local_path = "data/processed_exp93to105.h5"
 
 if not os.path.exists(local_path):
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
-    print("Downloading .h5 file from Google Drive...")
-    with requests.get(h5_url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    print("Downloading .h5 file from Google Drive with gdown...")
+    gdown.download(h5_url, local_path, quiet=False)
     print("Download complete.")
 data = sc.read(local_path)
 

@@ -18,5 +18,6 @@ scipy==1.12.0
 
 # HTTP requests
 requests==2.31.0
+gdown
 
 gunicorn
