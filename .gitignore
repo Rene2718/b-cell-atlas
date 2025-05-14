@@ -22,5 +22,4 @@ assets/b-atlas-p2.gif
 # Ignore log files
 *.log
 
-# Ignore runtime/deployment files not needed in GitHub
-runtime.txt
+

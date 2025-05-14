@@ -1,4 +1,4 @@
-python==3.9.22
+
 
 # Dash app dependencies
 dash==2.15.0
