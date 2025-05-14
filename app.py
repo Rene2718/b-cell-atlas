@@ -19,15 +19,18 @@ import requests
 import os
 import gdown
 
-h5_url = "https://drive.google.com/uc?export=download&id=1tTh4IUu_zsvoDnAeGp0aR2Fr1D34tOj2"
-local_path = "data/processed_exp93to105.h5"
 
-if not os.path.exists(local_path):
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-    print("Downloading .h5 file from Google Drive with gdown...")
-    gdown.download(h5_url, local_path, quiet=False)
+adata_url = "https://drive.google.com/uc?id=1uPkovtbs3xBSkZRM4hn9WVQqN5xIuBF4"
+adata_path = "data/processed_exp93to105_subset.h5ad"
+
+if not os.path.exists(adata_path):
+    os.makedirs(os.path.dirname(adata_path), exist_ok=True)
+    print("Downloading .h5ad file with gdown...")
+    gdown.download(adata_url, adata_path, quiet=False)
     print("Download complete.")
-data = sc.read(local_path)
+
+data = sc.read_h5ad(adata_path)
+
 
 gif_url = "https://drive.google.com/uc?export=download&id=1N2Eu_zpINag9GjsKhFyudS2dx96inaL5"
 gif_local_path = "assets/b-atlas-p2.gif"
