@@ -1,0 +1,26 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.venv/
+env/
+venv/
+ENV/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore local data and downloaded files
+data/
+assets/b-atlas-p2.gif
+
+# Ignore system-specific files
+.DS_Store
+
+# Ignore log files
+*.log
+
+# Ignore runtime/deployment files not needed in GitHub
+runtime.txt
