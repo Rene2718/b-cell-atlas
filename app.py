@@ -1,5 +1,4 @@
 # %%
-import base64
 import io
 import random
 import numpy as np
@@ -15,7 +14,7 @@ from dash.exceptions import PreventUpdate
 
 import plotly.express as px
 import plotly.graph_objects as go
-import requests
+
 import os
 import gdown
 
@@ -32,23 +31,6 @@ if not os.path.exists(adata_path):
 data = sc.read_h5ad(adata_path)
 
 
-gif_url = "https://drive.google.com/uc?export=download&id=1N2Eu_zpINag9GjsKhFyudS2dx96inaL5"
-gif_local_path = "assets/b-atlas-p2.gif"
-
-# Download the GIF once if not present
-if not os.path.exists(gif_local_path):
-    os.makedirs(os.path.dirname(gif_local_path), exist_ok=True)
-    print("Downloading GIF from Google Drive...")
-    with requests.get(gif_url, stream=True) as r:
-        r.raise_for_status()
-        with open(gif_local_path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-    print("GIF download complete.")
-
-# Encode the image for use in the app
-with open(gif_local_path, "rb") as gif_file:
-    encoded_image = base64.b64encode(gif_file.read()).decode()
 # %%
 
 
@@ -145,10 +127,13 @@ app.layout = html.Div(
                         html.Div(
                             [
                                 # GIF background
-                                html.Img(
-                                    src=f'data:image/png;base64,{encoded_image}',
-                                    className='portal-gif'
-                                ),
+                               html.Video(
+                                        src="/assets/b-atlas.mp4",
+                                        autoPlay=True,
+                                        loop=True,
+                                        muted=True,
+                                        className='portal-video'
+                                    ),
 
                                 # Title overlay
                                 html.Div(
@@ -628,7 +613,7 @@ def update_dotplot(gene_list, meta_col, selected_values):
 
     obs = data.obs[meta_col].astype(str)
     filtered_idx = obs[obs.isin(selected_values)].index
-    filtered_data = data[filtered_idx]
+    filtered_data = data[filtered_idx].copy()
 
     ordered_categories = {
         'Phenotype': [
@@ -660,8 +645,8 @@ def update_dotplot(gene_list, meta_col, selected_values):
     expr_df = pd.DataFrame(expr_matrix, index=filtered_data.obs_names, columns=gene_list)
     expr_df[meta_col] = filtered_data.obs[meta_col].values
 
-    avg_expr = expr_df.groupby(meta_col).mean().reset_index().melt(id_vars=meta_col, var_name="gene", value_name="avg_expr")
-    pct_expr = expr_df[gene_list].gt(0).groupby(expr_df[meta_col]).mean().reset_index().melt(id_vars=meta_col, var_name="gene", value_name="pct_expr")
+    avg_expr = expr_df.groupby(meta_col, observed=False).mean().reset_index().melt(id_vars=meta_col, var_name="gene", value_name="avg_expr")
+    pct_expr = expr_df[gene_list].gt(0).groupby(expr_df[meta_col],observed=False).mean().reset_index().melt(id_vars=meta_col, var_name="gene", value_name="pct_expr")
     plot_df = avg_expr.merge(pct_expr, on=[meta_col, 'gene'])
 
     # 🧼 Drop rows with missing data (e.g., gene not expressed in a group)
@@ -688,7 +673,7 @@ def update_dotplot(gene_list, meta_col, selected_values):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False, port=8053)
+    app.run(debug=True, use_reloader=False, port=8054)
 
 
 
