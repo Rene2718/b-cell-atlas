@@ -712,7 +712,6 @@ def update_dotplot(gene_list, meta_col, selected_values):
 
 
 if __name__ == '__main__':
-    prepare_metadata_options()
     app.run(debug=True, use_reloader=False, port=8054)
 
 
