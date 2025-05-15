@@ -19,35 +19,48 @@ import os
 import gdown
 
 
-adata_url = "https://drive.google.com/uc?id=1uPkovtbs3xBSkZRM4hn9WVQqN5xIuBF4"
-adata_path = "data/processed_exp93to105_subset.h5ad"
 
-if not os.path.exists(adata_path):
-    os.makedirs(os.path.dirname(adata_path), exist_ok=True)
-    print("Downloading .h5ad file with gdown...")
-    gdown.download(adata_url, adata_path, quiet=False)
-    print("Download complete.")
+def load_data():
+    adata_url = "https://drive.google.com/uc?id=1uPkovtbs3xBSkZRM4hn9WVQqN5xIuBF4"
+    adata_path = "data/processed_exp93to105_subset.h5ad"
 
-data = sc.read_h5ad(adata_path)
+    if not os.path.exists(adata_path):
+        os.makedirs(os.path.dirname(adata_path), exist_ok=True)
+        print("Downloading .h5ad file with gdown...")
+        gdown.download(adata_url, adata_path, quiet=False)
+        print("Download complete.")
+
+    return sc.read_h5ad(adata_path)
 
 
 # %%
 
 
+# Global placeholders (loaded on demand)
+data = None
+umap_df = None
+gene_options = []
+metadata_options = []
 custom_colors = px.colors.qualitative.Set3 + px.colors.qualitative.Dark24
 
 
-# Prepare UMAP coordinates
-umap_df = pd.DataFrame(
-    data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
-)
+def prepare_metadata_options():
+    global data, umap_df, metadata_options, gene_options
+    if data is None:
+        data = load_data()
+        umap_df = pd.DataFrame(
+            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
+        )
+        gene_options = [{'label': g, 'value': g} for g in data.var_names]
+        columns_to_show = ['Phenotype', 'Isotype', 'Isotype_subclass', 'Iso-Phenotype', 'Condition', 'Time']
+        metadata_options = [{'label': col, 'value': col} for col in columns_to_show]
+
+
+# Prepopulate dropdowns (you can also call this inside layout setup if you want to defer even more)
+prepare_metadata_options()
 
 
 
-# Dropdown options from metadata
-columns_to_show = ['Phenotype','Isotype','Isotype_subclass','Iso-Phenotype','Condition','Time']
-metadata_options = [{'label': col, 'value': col} for col in columns_to_show]
-gene_options = [{'label': g, 'value': g} for g in data.var_names]
 
 
 # %%
@@ -105,6 +118,7 @@ metadata_notes = {
 
 app = dash.Dash(__name__, title="B Cell Atlas")
 server = app.server
+print("✅ app.py loaded")
 app.layout = html.Div(
     [
         dcc.Location(id='url', refresh=False),
@@ -347,6 +361,7 @@ app.layout = html.Div(
 )
 
 
+
 # %%
 @app.callback(
     Output('landing-container', 'style'),
@@ -374,6 +389,12 @@ def route(pathname):
     Input('color-dropdown', 'value')
 )
 def update_filter_values(selected_meta):
+    global data, umap_df
+    if data is None:
+        data = load_data()
+        umap_df = pd.DataFrame(
+            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
+        )
     values = sorted(data.obs[selected_meta].dropna().astype(str).unique())
     options = [{'label': v, 'value': v} for v in values]
     return options, values  # default: select all values
@@ -385,6 +406,12 @@ def update_filter_values(selected_meta):
 )
 
 def update_umap_plot(meta_col, selected_values):
+    global data, umap_df
+    if data is None:
+        data = load_data()
+        umap_df = pd.DataFrame(
+            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
+        )
     df = umap_df.copy()
     df[meta_col] = data.obs[meta_col].astype(str)
     selected_values = selected_values or []
@@ -460,6 +487,12 @@ def update_umap_plot(meta_col, selected_values):
     Input('filter-value-dropdown', 'value')
 )
 def update_gene_plot(gene, meta_col, selected_values):
+    global data, umap_df
+    if data is None:
+        data = load_data()
+        umap_df = pd.DataFrame(
+            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
+        )
     df = umap_df.copy()
     df[meta_col] = data.obs[meta_col].astype(str)
     selected_values = selected_values or []
@@ -591,6 +624,12 @@ def update_filter_summary(selected_values, meta_col):
     Input('filter-value-dropdown', 'value')
 )
 def update_dotplot(gene_list, meta_col, selected_values):
+    global data, umap_df
+    if data is None:
+        data = load_data()
+        umap_df = pd.DataFrame(
+            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
+        )
     if not gene_list:
         fig = go.Figure()
         fig.add_annotation(
