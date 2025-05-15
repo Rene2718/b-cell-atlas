@@ -112,7 +112,7 @@ metadata_notes = {
 
 app = dash.Dash(__name__, title="B Cell Atlas")
 server = app.server
-print("✅ app.py loaded")
+print("✅ app.py loaded on Railway")
 
 def serve_layout():
     prepare_metadata_options()
