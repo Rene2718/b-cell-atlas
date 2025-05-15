@@ -104,7 +104,7 @@ metadata_notes = {
 
 
 app = dash.Dash(__name__, title="B Cell Atlas")
-
+server = app.server
 app.layout = html.Div(
     [
         dcc.Location(id='url', refresh=False),
