@@ -56,11 +56,6 @@ def prepare_metadata_options():
         metadata_options = [{'label': col, 'value': col} for col in columns_to_show]
 
 
-# Prepopulate dropdowns (you can also call this inside layout setup if you want to defer even more)
-prepare_metadata_options()
-
-
-
 
 
 # %%
@@ -115,12 +110,14 @@ metadata_notes = {
 
 # %%
 
-
 app = dash.Dash(__name__, title="B Cell Atlas")
 server = app.server
 print("✅ app.py loaded")
-app.layout = html.Div(
-    [
+
+def serve_layout():
+    prepare_metadata_options()
+    return html.Div(
+        [
         dcc.Location(id='url', refresh=False),
 
         html.Div(
@@ -358,8 +355,8 @@ app.layout = html.Div(
 
     ],
     className='app-container'
-)
-
+    )
+app.layout = serve_layout
 
 
 # %%
@@ -389,12 +386,13 @@ def route(pathname):
     Input('color-dropdown', 'value')
 )
 def update_filter_values(selected_meta):
-    global data, umap_df
+    global data, umap_df, gene_options, metadata_options
+    if selected_meta is None:
+        raise dash.exceptions.PreventUpdate
+
     if data is None:
-        data = load_data()
-        umap_df = pd.DataFrame(
-            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
-        )
+        prepare_metadata_options()
+
     values = sorted(data.obs[selected_meta].dropna().astype(str).unique())
     options = [{'label': v, 'value': v} for v in values]
     return options, values  # default: select all values
@@ -407,11 +405,12 @@ def update_filter_values(selected_meta):
 
 def update_umap_plot(meta_col, selected_values):
     global data, umap_df
+    if meta_col is None:
+        raise dash.exceptions.PreventUpdate
+
     if data is None:
-        data = load_data()
-        umap_df = pd.DataFrame(
-            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
-        )
+        prepare_metadata_options()
+
     df = umap_df.copy()
     df[meta_col] = data.obs[meta_col].astype(str)
     selected_values = selected_values or []
@@ -487,12 +486,13 @@ def update_umap_plot(meta_col, selected_values):
     Input('filter-value-dropdown', 'value')
 )
 def update_gene_plot(gene, meta_col, selected_values):
-    global data, umap_df
+    global data, umap_df, gene_options, metadata_options
+    if meta_col is None:
+        raise dash.exceptions.PreventUpdate
     if data is None:
-        data = load_data()
-        umap_df = pd.DataFrame(
-            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
-        )
+        prepare_metadata_options()
+    
+        
     df = umap_df.copy()
     df[meta_col] = data.obs[meta_col].astype(str)
     selected_values = selected_values or []
@@ -624,12 +624,12 @@ def update_filter_summary(selected_values, meta_col):
     Input('filter-value-dropdown', 'value')
 )
 def update_dotplot(gene_list, meta_col, selected_values):
-    global data, umap_df
+    global data, umap_df, gene_options, metadata_options
+    if meta_col is None:
+        raise dash.exceptions.PreventUpdate
     if data is None:
-        data = load_data()
-        umap_df = pd.DataFrame(
-            data.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=data.obs_names
-        )
+        prepare_metadata_options()
+
     if not gene_list:
         fig = go.Figure()
         fig.add_annotation(
@@ -712,6 +712,7 @@ def update_dotplot(gene_list, meta_col, selected_values):
 
 
 if __name__ == '__main__':
+    prepare_metadata_options()
     app.run(debug=True, use_reloader=False, port=8054)
 
 
