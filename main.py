@@ -147,7 +147,7 @@ server = app.server
 print("✅ app.py loaded on Railway")
 
 def serve_layout():
-    prepare_metadata_options()
+  
     return html.Div(
         [
         dcc.Location(id='url', refresh=False),
@@ -288,8 +288,8 @@ def serve_layout():
                             html.Label("Color by metadata:", style={'fontSize': '18px'}),
                             dcc.Dropdown(
                                 id='color-dropdown',
-                                options=metadata_options,
-                                value='Phenotype',
+                                options=[],
+                                value=None,
                                 style={'fontSize': '16px'}
                             ),
 
@@ -303,7 +303,7 @@ def serve_layout():
                             html.Label("Gene expression UMAP (enter gene name):", style={'fontSize': '18px'}),
                             dcc.Dropdown(
                                 id='gene-input',
-                                options=gene_options,
+                                options=[],
                                 placeholder='Select or type a gene',
                                 searchable=True,
                                 style={'fontSize': '16px'}
@@ -331,7 +331,7 @@ def serve_layout():
                             ),
                             dcc.Dropdown(
                                 id='gene-multi-input',
-                                options=gene_options,
+                                options=[],
                                 multi=True,
                                 style={'fontSize': '16px'}
                             ),
@@ -389,7 +389,7 @@ def serve_layout():
             html.Div(id='dot-ga-dummy', style={'display': 'none'})
         ], style={'display': 'none'}),
 
-        # ✅ Add this for background memory cleanup
+        # for background memory cleanup
         dcc.Interval(
             id='memory-cleanup-interval',
             interval=5 * 60 * 1000,  # every 5 min
@@ -404,6 +404,29 @@ app.layout = serve_layout
 
 # %%
 @app.callback(
+    Output('gene-input', 'options'),
+    Input('url', 'pathname'),
+    prevent_initial_call=True
+)
+def load_gene_options(pathname):
+    global gene_options
+    if data is None:
+        prepare_metadata_options()
+    return gene_options
+
+@app.callback(
+    Output('gene-multi-input', 'options'),
+    Input('url', 'pathname'),
+    prevent_initial_call=True
+)
+def load_gene_multi_options(pathname):
+    global gene_options
+    if data is None:
+        prepare_metadata_options()
+    return gene_options
+
+
+@app.callback(
     Output('landing-container', 'style'),
     Output('main-content', 'style'),
     Output('dashboard-footer', 'style'),
@@ -411,6 +434,8 @@ app.layout = serve_layout
 )
 def route(pathname):
     if pathname == '/main':
+        if data is None:
+            prepare_metadata_options()
         return (
             {'display': 'none'},
             {'display': 'block', 'padding': '20px'},
@@ -421,6 +446,18 @@ def route(pathname):
         {'display': 'none'},
         {'display': 'none'}  # hide footer
     )
+
+@app.callback(
+    Output('color-dropdown', 'options'),
+    Output('color-dropdown', 'value'),
+    Input('url', 'pathname'),
+    prevent_initial_call=True
+)
+def init_metadata_options(pathname):
+    global metadata_options
+    if data is None:
+        prepare_metadata_options()
+    return metadata_options, 'Phenotype'
 
 # Callback to update plot
 @app.callback(
