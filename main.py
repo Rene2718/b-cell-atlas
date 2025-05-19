@@ -17,7 +17,7 @@ import plotly.graph_objects as go
 
 import os
 import gdown
-
+import gc
 
 
 def load_data():
@@ -111,6 +111,38 @@ metadata_notes = {
 # %%
 
 app = dash.Dash(__name__, title="B Cell Atlas")
+
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XGSX2G42Q9"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-XGSX2G42Q9');
+        </script>
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
+
+
 server = app.server
 print("✅ app.py loaded on Railway")
 
@@ -351,6 +383,12 @@ def serve_layout():
             ),
             id='dashboard-footer',
             style={'display': 'none', 'width': '100%', 'textAlign': 'center'}
+        ),
+        # ✅ Add this for background memory cleanup
+        dcc.Interval(
+            id='memory-cleanup-interval',
+            interval=5 * 60 * 1000,  # every 5 min
+            n_intervals=0
         )
 
     ],
@@ -472,7 +510,8 @@ def update_umap_plot(meta_col, selected_values):
             line=dict(color="gray", width=1)
         )]
     )
-
+    del df  
+    gc.collect()  
     return fig 
 
   
@@ -585,6 +624,10 @@ def update_gene_plot(gene, meta_col, selected_values):
             yaxis=dict(showgrid=False, zeroline=False),
             
         )
+           # Cleanup
+        del df
+        gc.collect()
+
         return fig, f"Gene '{gene}' not found." if gene else ""
 
 @app.callback(
@@ -707,8 +750,53 @@ def update_dotplot(gene_list, meta_col, selected_values):
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
     )
+    # 🔥 Clean up memory
+    del filtered_data, expr_matrix, expr_df, avg_expr, pct_expr, plot_df
+    gc.collect()
+
     return fig
-     
+    
+@app.callback(
+    Output('memory-cleanup-interval', 'n_intervals'),
+    Input('memory-cleanup-interval', 'n_intervals')
+)
+def periodic_gc(n):
+    gc.collect()
+    print(f"[Memory cleanup] gc.collect() triggered at interval {n}")
+    return n    
+
+app.clientside_callback(
+    """
+    function(value) {
+        if (value) {
+            gtag('event', 'gene_search', {
+                'event_category': 'Gene Input',
+                'event_label': value,
+                'value': 1
+            });
+        }
+        return null;
+    }
+    """,
+    Output('gene-warning', 'children'),  # dummy output
+    Input('gene-input', 'value')
+)
+app.clientside_callback(
+    """
+    function(values) {
+        if (Array.isArray(values) && values.length > 0) {
+            gtag('event', 'dotplot_search', {
+                'event_category': 'DotPlot Genes',
+                'event_label': values.join(','),
+                'value': values.length
+            });
+        }
+        return null;
+    }
+    """,
+    Output('filter-summary', 'children'),  # dummy output
+    Input('gene-multi-input', 'value')
+)
 
 
 if __name__ == '__main__':
