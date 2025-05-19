@@ -111,7 +111,7 @@ metadata_notes = {
 # %%
 
 app = dash.Dash(__name__, title="B Cell Atlas")
-
+app.config.suppress_callback_exceptions = True
 app.index_string = '''
 <!DOCTYPE html>
 <html>
@@ -384,6 +384,11 @@ def serve_layout():
             id='dashboard-footer',
             style={'display': 'none', 'width': '100%', 'textAlign': 'center'}
         ),
+        html.Div([
+            html.Div(id='gene-ga-dummy', style={'display': 'none'}),
+            html.Div(id='dot-ga-dummy', style={'display': 'none'})
+        ], style={'display': 'none'}),
+
         # ✅ Add this for background memory cleanup
         dcc.Interval(
             id='memory-cleanup-interval',
@@ -765,6 +770,9 @@ def periodic_gc(n):
     print(f"[Memory cleanup] gc.collect() triggered at interval {n}")
     return n    
 
+
+
+# Then modify GA callbacks:
 app.clientside_callback(
     """
     function(value) {
@@ -778,9 +786,10 @@ app.clientside_callback(
         return null;
     }
     """,
-    Output('gene-warning', 'children'),  # dummy output
+    Output('gene-ga-dummy', 'children'),
     Input('gene-input', 'value')
 )
+
 app.clientside_callback(
     """
     function(values) {
@@ -794,13 +803,14 @@ app.clientside_callback(
         return null;
     }
     """,
-    Output('filter-summary', 'children'),  # dummy output
+    Output('dot-ga-dummy', 'children'),
     Input('gene-multi-input', 'value')
 )
 
 
+
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False, port=8054)
+    app.run(debug=True, use_reloader=False, port=8055)
 
 
 
