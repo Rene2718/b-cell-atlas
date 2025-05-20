@@ -53,7 +53,7 @@ button,
 
 /* make the landing screen cover exactly one viewport, no scrolling */
 #landing-container {
-  background-color:		#fffef5;
+  background:linear-gradient(135deg, #fffef5 60%, #e0f0ff 100%);
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
