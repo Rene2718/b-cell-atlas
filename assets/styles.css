@@ -50,26 +50,7 @@ button,
   }
 }
 
-/* 3) full-bleed wrapper for your GIF */
-.gif-wrapper {
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  width: 100vw;
-  height: 100vh;
-  overflow: visible;  /* so nothing is clipped */
-  z-index: -1;        /* send it behind your overlays */
-}
 
-/* 4) make the <img> inside fill that full-bleed wrapper */
-.gif-wrapper .portal-gif {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* shows the entire frame without cropping */
-  display: block;
-}
 /* make the landing screen cover exactly one viewport, no scrolling */
 #landing-container {
   position: fixed !important;
@@ -98,12 +79,28 @@ button,
   padding: 10px;
   box-sizing: border-box;
 }
-.portal-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
+
+
+.image-center-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   height: 100vh;
-  object-fit: cover;
-  z-index: -1;
+}
+
+.centered-image {
+  width: 60vw;            /* scale based on viewport width */
+  height: auto;
+  max-height: 80vh;       /* never taller than viewport */
+  border-radius: 10px;
+}
+
+.title-top-left {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  z-index: 10;
+  color: black;
+  font-size: 20px;
+  font-weight: bold;
 }

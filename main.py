@@ -155,49 +155,36 @@ def serve_layout():
         html.Div(
             id='page-container',
             children=[
-
                 # ——— Landing Screen ———
                 html.Div(
                     id='landing-container',
-                    style={
-                        'display': 'block',
-                        'height': '100vh',
-                        'overflow': 'hidden'
-                    },
+                    className='landing-wrapper',
                     children=[
-
-                        # full-bleed wrapper for the GIF
                         html.Div(
-                            [
-                                # GIF background
-                               html.Video(
-                                        src="/assets/b-atlas.mp4",
-                                        autoPlay=True,
-                                        loop=True,
-                                        muted=True,
-                                        className='portal-video'
-                                    ),
-
-                                # Title overlay
-                                html.Div(
-                                    "AtlasView",
-                                    style={
-                                        'position': 'absolute',
-                                        'top': '20px',
-                                        'left': '30px',
-                                        'zIndex': 10,
-                                        'color': 'white',
-                                        'fontSize': '18px',
-                                        'backgroundColor': 'rgba(0,0,0,0.4)',
-                                        'padding': '5px 10px',
-                                        'borderRadius': '5px'
+                                 "AtlasView",className="title-top-left",
+                                style={
+                                    'position': 'absolute',
+                                    'top': '20px',
+                                    'right': '30px',
+                                    'zIndex': 10,
+                                    'color': 'black',
+                                    'fontSize': '20px',
+                                    'fontWeight': 'bold'
                                     }
                                 ),
+                        html.Div(
+                            html.Img(
+                                src="/assets/umap-illustration.png",
+                                className='centered-image'
+                            ),
+                            className='image-center-wrapper'  
+                        ),
+                        
 
                                 # Enter button
-                                html.Div(
-                                    dcc.Link(
-                                        html.Button(
+                        html.Div(
+                            dcc.Link(
+                                html.Button(
                                             "Single Cell Data Portal→",
                                             id='enter-text',
                                             className='enter-button',
@@ -224,29 +211,24 @@ def serve_layout():
                                 ),
 
                                 # Landing footer
-                                html.Footer(
-                                    html.P(
-                                        "© 2025 Rene Cheng Gibson",
-                                        style={
-                                            'textAlign': 'center',
-                                            'color': 'grey',
-                                            'fontSize': '14px',
-                                            'margin': '0'
+                        html.Footer(
+                            html.P(
+                                    "© 2025 Rene Cheng Gibson",
+                                    style={
+                                        'textAlign': 'center',
+                                        'color': 'grey',
+                                        'fontSize': '14px',
+                                        'margin': '0'
                                         }
                                     ),
-                                    style={
-                                        'position': 'absolute',
-                                        'bottom': '0',
-                                        'width': '100%',
-                                        'zIndex': 10
-                                    }
-                                ),
-
-                            ],
-                            className='gif-wrapper'
-                        ),
-
-                    ]
+                                style={
+                                    'position': 'absolute',
+                                    'bottom': '0',
+                                    'width': '100%',
+                                    'zIndex': 10
+                                }
+                            ),
+                        ],
                 ),
 
                 # ——— Main Dashboard ———
@@ -373,32 +355,30 @@ def serve_layout():
 
             ],
             style={'minHeight': 'calc(100vh - 60px)'}
-        ),
+    ),
 
         # Footer for the dashboard pages
         html.Footer(
             html.P(
                 "© 2025 Rene Cheng Gibson",
                 style={'textAlign': 'center', 'color': 'gray', 'fontSize': '14px', 'margin': '10px 0'}
+                ),
+                id='dashboard-footer',
+                style={'display': 'none', 'width': '100%', 'textAlign': 'center'}
             ),
-            id='dashboard-footer',
-            style={'display': 'none', 'width': '100%', 'textAlign': 'center'}
-        ),
         html.Div([
-            html.Div(id='gene-ga-dummy', style={'display': 'none'}),
-            html.Div(id='dot-ga-dummy', style={'display': 'none'})
-        ], style={'display': 'none'}),
-
+             html.Div(id='gene-ga-dummy', style={'display': 'none'}),
+             html.Div(id='dot-ga-dummy', style={'display': 'none'})
+            ], style={'display': 'none'}),
         # for background memory cleanup
         dcc.Interval(
             id='memory-cleanup-interval',
             interval=5 * 60 * 1000,  # every 5 min
             n_intervals=0
         )
-
     ],
     className='app-container'
-    )
+)
 app.layout = serve_layout
 
 
