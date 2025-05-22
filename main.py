@@ -11,7 +11,6 @@ from matplotlib.markers import MarkerStyle
 import dash
 from dash import html, dcc, Output, Input, State
 from dash.exceptions import PreventUpdate
-
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -147,7 +146,7 @@ server = app.server
 print("✅ app.py loaded on Railway")
 
 def serve_layout():
-  
+    
     return html.Div(
         [
         dcc.Location(id='url', refresh=False),
@@ -376,6 +375,7 @@ def serve_layout():
             interval=5 * 60 * 1000,  # every 5 min
             n_intervals=0
         )
+        
     ],
     className='app-container'
 )
@@ -542,9 +542,11 @@ def update_umap_plot(meta_col, selected_values):
 @app.callback(
     Output('gene-umap', 'figure'),
     Output('gene-warning', 'children'),
+    Output("gene-ga-dummy", "children", allow_duplicate=True),  # ✅ dummy div
     Input('gene-input', 'value'),
     Input('color-dropdown', 'value'),
-    Input('filter-value-dropdown', 'value')
+    Input('filter-value-dropdown', 'value'),
+    prevent_initial_call=True
 )
 def update_gene_plot(gene, meta_col, selected_values):
     global data, umap_df, gene_options, metadata_options
@@ -612,7 +614,7 @@ def update_gene_plot(gene, meta_col, selected_values):
             yaxis=dict(showgrid=False, zeroline=False),
             
         )
-        return fig, ""
+        return fig, "", gene 
 
     else:
         # If no gene is selected or gene is invalid, show just grey UMAP + message
@@ -650,7 +652,8 @@ def update_gene_plot(gene, meta_col, selected_values):
         del df
         gc.collect()
 
-        return fig, f"Gene '{gene}' not found." if gene else ""
+        return fig, f"Gene '{gene}' not found." if gene else "", dash.no_update
+
 
 @app.callback(
     Output('filter-summary', 'children'),
@@ -684,9 +687,11 @@ def update_filter_summary(selected_values, meta_col):
 
 @app.callback(
     Output('dotplot', 'figure'),
+    Output("gene-ga-dummy", "children", allow_duplicate=True),  # ✅ dummy div
     Input('gene-multi-input', 'value'),
     Input('color-dropdown', 'value'),
-    Input('filter-value-dropdown', 'value')
+    Input('filter-value-dropdown', 'value'),
+    prevent_initial_call=True
 )
 def update_dotplot(gene_list, meta_col, selected_values):
     global data, umap_df, gene_options, metadata_options
@@ -710,7 +715,7 @@ def update_dotplot(gene_list, meta_col, selected_values):
             paper_bgcolor='rgba(0,0,0,0)',
             height=300
         )
-        return fig
+        return fig, dash.no_update 
 
     if any(g not in data.var_names for g in gene_list):
         return go.Figure(data=[])
@@ -776,7 +781,7 @@ def update_dotplot(gene_list, meta_col, selected_values):
     del filtered_data, expr_matrix, expr_df, avg_expr, pct_expr, plot_df
     gc.collect()
 
-    return fig
+    return fig, ", ".join(gene_list)
     
 @app.callback(
     Output('memory-cleanup-interval', 'n_intervals'),
